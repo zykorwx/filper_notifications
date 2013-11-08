@@ -1,0 +1,370 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="LibreOffice 4.1.2.3 (Linux)">
+	<META NAME="AUTHOR" CONTENT="Saul Torres">
+	<META NAME="CREATED" CONTENT="20131031;438342228">
+	<META NAME="CHANGEDBY" CONTENT="Saul Torres">
+	<META NAME="CHANGED" CONTENT="20131107;191549356078443">
+	<META NAME="CHANGEDBY" CONTENT="Saul Torres">
+	<META NAME="CHANGEDBY" CONTENT="Saul Torres">
+	<STYLE TYPE="text/css">
+	<!--
+		@page { margin: 2cm }
+		CODE.ctl { font-family: "Lohit Hindi", monospace }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="es-MX" DIR="LTR">
+<P><BR><BR>
+</P>
+<P><FONT SIZE=4 STYLE="font-size: 16pt"><B>Documentación servicio
+Push Filper</B></FONT></P>
+<P STYLE="font-weight: normal">El servicio fue construido para poder
+usarse con django, pero puede ser exportado a otros frameworks.</P>
+<P STYLE="font-weight: normal">Para su elaboración fue necesario
+crear:</P>
+<P STYLE="font-weight: normal">1.- Servidor Websocket en python, que
+resolviera llamadas RPC ( Remote Procedural Call) y llamadas WAMP
+(Websocket Aplication Message Protocol). <I><B>(</B></I><FONT COLOR="#0000ff"><I><B>servidorWebsocket.py)</B></I></FONT></P>
+<P STYLE="font-weight: normal">2.- Un intermediario de mensajes entre
+el servidor y los dispositivos conectados creado en nodejs.
+<FONT COLOR="#0000ff"><I><B>(cliente_websocket_nodejs)</B></I></FONT></P>
+<P STYLE="font-weight: normal"><I>3.- </I><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal">Aplicacion
+para django para controlar los mensajes push. </SPAN></SPAN><SPAN STYLE="font-variant: normal"><FONT COLOR="#0000ff"><SPAN STYLE="font-style: normal">(</SPAN></FONT></SPAN><FONT COLOR="#0000ff"><I><B>django_app_push</B></I></FONT><SPAN STYLE="font-variant: normal"><FONT COLOR="#0000ff"><SPAN STYLE="font-style: normal">)</SPAN></FONT></SPAN></P>
+<P STYLE="font-weight: normal"><SPAN STYLE="font-variant: normal"><SPAN STYLE="font-style: normal">4.
+paquete para el control de las notificaciones en android.
+</SPAN></SPAN><SPAN STYLE="font-variant: normal"><FONT COLOR="#0000ff"><SPAN STYLE="font-style: normal">(</SPAN></FONT></SPAN><FONT COLOR="#0000ff"><I><B>package_notifications_android</B></I></FONT><SPAN STYLE="font-variant: normal"><FONT COLOR="#0000ff"><SPAN STYLE="font-style: normal">)</SPAN></FONT></SPAN></P>
+<P><BR><BR>
+</P>
+<P><FONT SIZE=4><I><B>A continuacion explicaremos a detalle cada uno
+de los anteriores paquetes y como implementarlos en una solucion de
+ejemplo.</B></I></FONT></P>
+<P><BR><BR>
+</P>
+<P STYLE="font-variant: normal; font-style: normal"><FONT SIZE=6><B>servidorWebsocket.py</B></FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>Es un pequeño pero
+poderoso script que se encarga de gestionar y resolver todos los
+eventos sobre los webSockets.</FONT></P>
+<P><FONT SIZE=4 STYLE="font-size: 16pt"><B>Requerimientos:</B></FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>Es indispensable tener
+instalado los siguientes componentes para el correcto funcionamiento
+del script.</FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>1.- Python 2.7 - Es la
+realizaron en la que se hicieron las pruebas.</FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>2.- Autobahn – Es la
+librería principal para hacer funcionar este script, si no la tienes
+instalada la puedes instalar de la siguiente forma:</FONT></P>
+<P STYLE="font-weight: normal"><FONT COLOR="#000000"><FONT SIZE=3>Usando
+el siguiente comando en la consola para instalar: </FONT><FONT COLOR="#0000ff"><B>easy_install
+autobahn</B></FONT></FONT></P>
+<P STYLE="font-weight: normal"><FONT COLOR="#000000"><FONT SIZE=3>Usando
+el siguiente comando en la consola para actualizar: </FONT><FONT COLOR="#0000ff"><B>easy_install
+-U autobahn</B></FONT></FONT></P>
+<P><BR><BR>
+</P>
+<P><FONT SIZE=4 STYLE="font-size: 16pt"><B>Correr el script:</B></FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>Para ejecutar el script
+es muy sencillo, abrimos una consola de comandos ya sea en Windows o
+Linux, nos movemos hasta donde tengamos guardado el archivo del
+script por ejemplo: <FONT FACE="Tlwg Typo">cd
+/home/user/servicio_push/</FONT><FONT FACE="Times New Roman, serif">.
+Dentro de la carpeta ejecutamos el archivo con el siguiente comando.</FONT></FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3><FONT FACE="Tlwg Typo">Python
+servidorWebsocket.py</FONT> <FONT FACE="Times New Roman, serif">Este
+comando ejecutara el script pero sin mostrar un debug</FONT></FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3><FONT FACE="Tlwg Typo">Python
+servidorWebsocket.py debug</FONT> <FONT FACE="Times New Roman, serif">Este
+comando ejecutara el script mostrando el debug del script</FONT></FONT></P>
+<P STYLE="font-weight: normal"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>Si
+nos llegara a mostrar un error como el siguiente:</FONT></FONT></P>
+<P><IMG SRC="Documentacion_html_8fc8796b.jpg" NAME="gráficos1" ALIGN=LEFT WIDTH=709 HEIGHT=193 BORDER=0><BR><BR>
+</P>
+<P><BR><BR>
+</P>
+<P><BR><BR>
+</P>
+<P><BR><BR>
+</P>
+<P><BR><BR>
+</P>
+<P><BR><BR>
+</P>
+<P STYLE="font-weight: normal">Debemos ejecutar el script como súper
+usuario.</P>
+<P><BR><BR>
+</P>
+<P STYLE="font-variant: normal; font-style: normal"><FONT SIZE=6><B>cliente_websocket_nodejs</B></FONT></P>
+<P STYLE="font-variant: normal; font-style: normal; font-weight: normal">
+<FONT FACE="Times New Roman, serif"><FONT SIZE=3>Se usa como
+intermediario entre el servidor y los dispositivos conectados, su
+principal uso es para que el servidor envié notificaciones a paginas
+web celulares etc.</FONT></FONT></P>
+<P STYLE="margin-bottom: 0cm"><BR>
+</P>
+<P><FONT SIZE=4 STYLE="font-size: 16pt"><B>Requerimientos:</B></FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>Es indispensable tener
+instalado los siguientes componentes para poder correr este cliente
+nodejs.</FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>1.- nodejs 10.20 - Es la
+versión en la que se realizaron las pruebas.</FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>2.- express 3.4.0&quot; –
+Es la versión en la que se realizaron las pruebas. Usa el siguiente
+comando para instalarlo: <FONT COLOR="#0000ff"><I><B>npm install -g
+express o sudo npm install -g express</B></I></FONT></FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>3.- Los otros
+requerimientos están incluidos en la carpeta node_modules</FONT></P>
+<P><FONT SIZE=4 STYLE="font-size: 16pt"><B>Correr el cliente nodejs:</B></FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>Como el trabajo de este
+cliente es totalmente transparente no tienes que modificar opciones
+para correrlo, solo ejecuta el siguiente comando dentro del proyecto
+en donde se encuenta el archivo app.js .</FONT></P>
+<P STYLE="font-weight: normal"><FONT FACE="Tlwg Typo"><FONT SIZE=3>node
+app.js</FONT></FONT></P>
+<P><BR><BR>
+</P>
+<P STYLE="font-variant: normal; font-style: normal; text-decoration: none">
+<FONT SIZE=6><B>django_push</B></FONT></P>
+<P STYLE="font-variant: normal; font-style: normal; font-weight: normal; text-decoration: none">
+<FONT SIZE=3>Esta carpeta contiene una aplicación para django, la
+cual servirá de helper para verificar si el usuario se encuentra
+conectado en algún dispositivo y también para enviar notificaciones
+a distintos usuarios.</FONT></P>
+<P><FONT SIZE=4 STYLE="font-size: 16pt"><B><SPAN STYLE="text-decoration: none">Requerimientos</SPAN><U>:</U></B></FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>Es indispensable tener
+instalado los <SPAN STYLE="text-decoration: none">siguientes</SPAN>
+componentes para poder correr esta aplicación django.</FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>1.- django 1.5.5 - Es la
+versión en la que se realizaron las pruebas.</FONT></P>
+<P><BR><BR>
+</P>
+<P><FONT SIZE=4 STYLE="font-size: 16pt"><B><SPAN STYLE="text-decoration: none">NotificationsHelper</SPAN><U>:</U></B></FONT></P>
+<P><FONT SIZE=3><B>getStatusUser(to)</B></FONT></P>
+<P><FONT SIZE=3><B>to:</B> <SPAN STYLE="font-weight: normal">Es el
+nombre del </SPAN><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-weight: normal">usuario</SPAN></SPAN>
+<SPAN STYLE="font-weight: normal">que deseas conocer su status.</SPAN></FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>Permite conocer el estado
+del usuario, si esta conectado o si su servicio en el celular esta
+funcionando</FONT></P>
+<P><BR><BR>
+</P>
+<P><FONT SIZE=3><B>sendNotification(to, _from, activity, message,
+title)</B></FONT></P>
+<P><FONT SIZE=3><B>to:</B> <SPAN STYLE="font-weight: normal">Es el
+nombre del </SPAN><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-weight: normal">usuario</SPAN></SPAN>
+<SPAN STYLE="font-weight: normal">al que se le enviara la
+</SPAN><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-weight: normal">notificacion</SPAN></SPAN></FONT></P>
+<P><FONT SIZE=3><B>_from:</B> <SPAN STYLE="font-weight: normal">Es el
+nombre del </SPAN><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-weight: normal">usuario</SPAN></SPAN>
+<SPAN STYLE="font-weight: normal">que deseas conocer su status.</SPAN></FONT></P>
+<P><FONT SIZE=3><B>Activity:</B> <SPAN STYLE="font-weight: normal">Es
+el nombre de la actividad que se abrira en android</SPAN></FONT></P>
+<P><FONT SIZE=3><B>message: </B><SPAN STYLE="font-weight: normal">Es
+el mensaje que mostrara la notificacion debe ser menor de 100
+caracteres</SPAN></FONT></P>
+<P><FONT SIZE=3><B>tiitle: </B><SPAN STYLE="font-weight: normal">Es
+el titulo de la notificacion debe ser menor a 20 caracteres</SPAN></FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>Permite enviar
+notificaciones al usuario deseado</FONT></P>
+<P><BR><BR>
+</P>
+<P><FONT SIZE=3><B>getNotification(userName, order=None)</B></FONT></P>
+<P><FONT SIZE=3><B>userName:</B> <SPAN STYLE="text-decoration: none"><SPAN STYLE="font-weight: normal">Nombre
+de usuario que se desea buscar sus notificaciones</SPAN></SPAN></FONT></P>
+<P><FONT SIZE=3><B>order:</B> <SPAN STYLE="font-weight: normal">Si es
+</SPAN><B>None</B><SPAN STYLE="font-weight: normal">, se mostraran
+todas las notificaciones, si es </SPAN><B>True</B> <SPAN STYLE="font-weight: normal">se
+mostraran todas todas las </SPAN></FONT>
+</P>
+<P><FONT SIZE=3><SPAN STYLE="font-weight: normal">notificaciones que
+no hayan sido vistas, si es </SPAN><B>false</B><SPAN STYLE="font-weight: normal">,
+se mostraran todas las notificaciones vistas</SPAN></FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>Permite obtener las
+notificaciones de un usuario con diferentes filtros.</FONT></P>
+<P><BR><BR>
+</P>
+<P><FONT SIZE=4 STYLE="font-size: 16pt"><B><SPAN STYLE="text-decoration: none">ChangeUserStateConexion(request)</SPAN><U>:</U></B></FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>Esta
+funcion que esta dentro del archivo view, permite que cada vez que se
+conecte un usuario o se desconecte del servicio push el servidor
+conozca su estado</FONT></P>
+<P><BR><BR>
+</P>
+<P><FONT SIZE=4 STYLE="font-size: 16pt"><B><SPAN STYLE="text-decoration: none">Integrar
+django_push a un proyecto django</SPAN><U>:</U></B></FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>Encontraras
+un ejemplo en la carpeta de github ejemplos/django</FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>Los
+puntos claves a hacer es:</FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>1.
+Agregar la carpeta app_push a tu proyecto django</FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>2.
+Agregar a tus urls el la siguiente ruta: <FONT FACE="Tlwg Typo">url(r'',
+include('push.urls')),</FONT></FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>3.
+Agregar la aplicacion en tu settings.py file: <FONT FACE="Tlwg Typo">'django_push',</FONT></FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>4.
+Sincronizar base de datos : <FONT FACE="Tlwg Typo">python manage.py
+syncdb</FONT></FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>5.
+Agregar el siguiente import en donde lo necesites:</FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT FACE="Tlwg Typo"><FONT SIZE=3>from
+django_push.notificationsHelper import *</FONT></FONT></P>
+<P><BR><BR>
+</P>
+<P STYLE="font-variant: normal; font-style: normal; text-decoration: none">
+<FONT SIZE=6><B>android_notifications</B></FONT></P>
+<P STYLE="font-variant: normal; font-style: normal; font-weight: normal; text-decoration: none">
+<FONT SIZE=3>Esta carpeta contiene el codigo necesario para poder
+usar las notificaciones en android</FONT></P>
+<P><FONT SIZE=4 STYLE="font-size: 16pt"><B><SPAN STYLE="text-decoration: none">Requerimientos</SPAN><U>:</U></B></FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>Es indispensable tener
+instalado los <SPAN STYLE="text-decoration: none">siguientes</SPAN>
+componentes para poder usar este paquete para Android</FONT></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3>1.- Agregar las
+siguientes librerías al proyecto: 
+<A HREF="https://autobahn.s3.amazonaws.com/android/autobahn-0.5.0.zip">https://autobahn.s3.amazonaws.com/android/autobahn-0.5.0.zip</A></FONT></P>
+<P>2. Agregar los .jar al folder libs del proyecto Android</P>
+<P>3. Agregar los JARs al  java buld path</P>
+<P><IMG SRC="http://autobahn.ws/static/img/autobahn_eclipse2.png" NAME="gráficos2" ALIGN=BOTTOM WIDTH=801 HEIGHT=555 BORDER=0></P>
+<P STYLE="font-weight: normal"><FONT SIZE=3><SPAN STYLE="text-decoration: none">4.-
+Agregar el permiso para usar internet en el manifiest:
+</SPAN><SPAN STYLE="font-variant: normal"><FONT COLOR="#333333"><SPAN STYLE="text-decoration: none"><FONT FACE="Segoe UI, Lucida Grande, Helvetica Neue, Helvetica, Arial, sans-serif"><I>android.permission.INTERNET</I></FONT></SPAN></FONT></SPAN></FONT></P>
+<P STYLE="margin-bottom: 0cm"><FONT SIZE=4 STYLE="font-size: 16pt"><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">&lt;?</SPAN></SPAN></SPAN></FONT></FONT></SPAN></FONT></SPAN></CODE><B><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#006699"><SPAN STYLE="text-decoration: none"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="background: #ffffff">xml</SPAN></SPAN></FONT></FONT></SPAN></FONT></SPAN></CODE></B><SPAN STYLE="font-variant: normal"><FONT COLOR="#333333"><SPAN STYLE="text-decoration: none"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">
+</SPAN></SPAN></SPAN></FONT></FONT></SPAN></FONT></SPAN><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#808080"><SPAN STYLE="text-decoration: none"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">version</SPAN></SPAN></SPAN></FONT></FONT></SPAN></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">=</SPAN></SPAN></SPAN></FONT></FONT></SPAN></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#0000ff"><SPAN STYLE="text-decoration: none"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">&quot;1.0&quot;</SPAN></SPAN></SPAN></FONT></FONT></SPAN></FONT></SPAN></CODE><SPAN STYLE="font-variant: normal"><FONT COLOR="#333333"><SPAN STYLE="text-decoration: none"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">
+</SPAN></SPAN></SPAN></FONT></FONT></SPAN></FONT></SPAN><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#808080"><SPAN STYLE="text-decoration: none"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">encoding</SPAN></SPAN></SPAN></FONT></FONT></SPAN></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">=</SPAN></SPAN></SPAN></FONT></FONT></SPAN></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#0000ff"><SPAN STYLE="text-decoration: none"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">&quot;utf-8&quot;</SPAN></SPAN></SPAN></FONT></FONT></SPAN></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">?&gt;</SPAN></SPAN></SPAN></FONT></FONT></SPAN></FONT></SPAN></CODE></FONT></P>
+<P ALIGN=LEFT STYLE="margin-bottom: 0cm; border: none; padding: 0cm; line-height: 0.4cm">
+<CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">&lt;</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#006699"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><B><SPAN STYLE="background: #ffffff">manifest</SPAN></B></SPAN></FONT></FONT></FONT></SPAN></CODE><SPAN STYLE="font-variant: normal"><FONT COLOR="#333333"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">
+</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#808080"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">xmlns:android</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">=</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#0000ff"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">&quot;http://schemas.android.com/apk/res/android&quot;</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE><SPAN STYLE="font-variant: normal"><FONT COLOR="#333333"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">
+</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">...&gt;</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE></P>
+<P ALIGN=LEFT STYLE="margin-bottom: 0cm; border: none; padding: 0cm; font-variant: normal; line-height: 0.4cm">
+<FONT COLOR="#333333"><SPAN STYLE="background: #ffffff">&nbsp;</SPAN></FONT></P>
+<P ALIGN=LEFT STYLE="margin-bottom: 0cm; border: none; padding: 0cm; line-height: 0.4cm">
+<CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#333333"><SPAN STYLE="background: #e0e0e0">&nbsp;&nbsp;&nbsp;&nbsp;</SPAN></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #e0e0e0">&lt;</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#006699"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><B><SPAN STYLE="background: #e0e0e0">uses-permission</SPAN></B></SPAN></FONT></FONT></FONT></SPAN></CODE><SPAN STYLE="font-variant: normal"><FONT COLOR="#333333"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #e0e0e0">
+</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#808080"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #e0e0e0">android:name</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #e0e0e0">=</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#0000ff"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #e0e0e0">&quot;android.permission.INTERNET&quot;</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #e0e0e0">&gt;</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE></P>
+<P ALIGN=LEFT STYLE="margin-bottom: 0cm; border: none; padding: 0cm; line-height: 0.4cm">
+<CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#333333"><SPAN STYLE="background: #e0e0e0">&nbsp;&nbsp;&nbsp;&nbsp;</SPAN></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #e0e0e0">&lt;/</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#006699"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><B><SPAN STYLE="background: #e0e0e0">uses-permission</SPAN></B></SPAN></FONT></FONT></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #e0e0e0">&gt;</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE></P>
+<P ALIGN=LEFT STYLE="margin-bottom: 0cm; border: none; padding: 0cm; font-variant: normal; line-height: 0.4cm">
+<FONT COLOR="#333333"><SPAN STYLE="background: #ffffff">&nbsp;</SPAN></FONT></P>
+<P ALIGN=LEFT STYLE="margin-bottom: 0cm; border: none; padding: 0cm; line-height: 0.4cm">
+<CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#333333"><SPAN STYLE="background: #ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</SPAN></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">&lt;</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#006699"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><B><SPAN STYLE="background: #ffffff">application</SPAN></B></SPAN></FONT></FONT></FONT></SPAN></CODE><SPAN STYLE="font-variant: normal"><FONT COLOR="#333333"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">
+</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">...&gt;</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE></P>
+<P ALIGN=LEFT STYLE="margin-bottom: 0cm; border: none; padding: 0cm; line-height: 0.4cm">
+<CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#333333"><SPAN STYLE="background: #ffffff">&nbsp;&nbsp;&nbsp;&nbsp;</SPAN></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">&lt;/</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#006699"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><B><SPAN STYLE="background: #ffffff">application</SPAN></B></SPAN></FONT></FONT></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">&gt;</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE></P>
+<P ALIGN=LEFT STYLE="margin-bottom: 0cm; border: none; padding: 0cm; line-height: 0.4cm">
+<CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">&lt;/</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#006699"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><B><SPAN STYLE="background: #ffffff">manifest</SPAN></B></SPAN></FONT></FONT></FONT></SPAN></CODE><CODE CLASS="western"><SPAN STYLE="font-variant: normal"><FONT COLOR="#000000"><FONT FACE="Consolas, Bitstream Vera Sans Mono, Courier New, Courier, monospace"><FONT SIZE=2 STYLE="font-size: 10pt"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal"><SPAN STYLE="background: #ffffff">&gt;</SPAN></SPAN></SPAN></FONT></FONT></FONT></SPAN></CODE></P>
+<P><SPAN STYLE="text-decoration: none"><IMG SRC="http://autobahn.ws/static/img/autobahn_eclipse3.png" NAME="gráficos3" ALIGN=BOTTOM WIDTH=572 HEIGHT=305 BORDER=0></SPAN></P>
+<P STYLE="font-weight: normal"><BR><BR>
+</P>
+<P><SPAN STYLE="text-decoration: none"><FONT SIZE=3><SPAN STYLE="font-weight: normal">5.-
+Agregar  el servicio en el android manifiest: </SPAN></FONT></SPAN><FONT COLOR="#008080"><SPAN STYLE="text-decoration: none"><FONT FACE="Monospace"><FONT SIZE=2>&lt;</FONT></FONT></SPAN></FONT><FONT COLOR="#3f7f7f"><FONT FACE="Monospace"><FONT SIZE=2>service</FONT></FONT></FONT><FONT FACE="Monospace"><FONT SIZE=2>
+</FONT></FONT><FONT COLOR="#7f007f"><FONT FACE="Monospace"><FONT SIZE=2>android:name</FONT></FONT></FONT><FONT COLOR="#3c3c3c"><FONT FACE="Monospace"><FONT SIZE=2>=</FONT></FONT></FONT><FONT COLOR="#2a00ff"><FONT FACE="Monospace"><FONT SIZE=2><I>&quot;com.filper.notifications.WebSocketService&quot;</I></FONT></FONT></FONT><FONT FACE="Monospace"><FONT SIZE=2>
+</FONT></FONT><FONT COLOR="#008080"><FONT FACE="Monospace"><FONT SIZE=2>/&gt;</FONT></FONT></FONT></P>
+<P STYLE="margin-bottom: 0cm; font-weight: normal"><FONT COLOR="#3c3c3c"><SPAN STYLE="text-decoration: none">
+   </SPAN></FONT><FONT SIZE=3><FONT COLOR="#008080"><FONT FACE="Monospace"><FONT SIZE=2>&lt;</FONT></FONT></FONT><FONT COLOR="#3f7f7f"><FONT FACE="Monospace"><FONT SIZE=2>application</FONT></FONT></FONT></FONT></P>
+<P ALIGN=LEFT STYLE="margin-bottom: 0cm">        <FONT COLOR="#008080"><FONT FACE="Monospace"><FONT SIZE=2><I>...</I></FONT></FONT></FONT></P>
+<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT COLOR="#3c3c3c">      
+ </FONT><FONT COLOR="#008080"><FONT FACE="Monospace"><FONT SIZE=2>&lt;</FONT></FONT></FONT><FONT COLOR="#3f7f7f"><FONT FACE="Monospace"><FONT SIZE=2>service</FONT></FONT></FONT><FONT FACE="Monospace"><FONT SIZE=2>
+</FONT></FONT><FONT COLOR="#7f007f"><FONT FACE="Monospace"><FONT SIZE=2>android:name</FONT></FONT></FONT><FONT COLOR="#3c3c3c"><FONT FACE="Monospace"><FONT SIZE=2>=</FONT></FONT></FONT><FONT COLOR="#2a00ff"><FONT FACE="Monospace"><FONT SIZE=2><I>&quot;com.filper.notifications.WebSocketService&quot;</I></FONT></FONT></FONT><FONT FACE="Monospace"><FONT SIZE=2>
+</FONT></FONT><FONT COLOR="#008080"><FONT FACE="Monospace"><FONT SIZE=2>/&gt;</FONT></FONT></FONT></P>
+<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT COLOR="#008080">      
+ <FONT FACE="Monospace"><FONT SIZE=2>...</FONT></FONT></FONT></P>
+<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><FONT COLOR="#3c3c3c">   
+</FONT><FONT COLOR="#008080"><FONT FACE="Monospace"><FONT SIZE=2>&lt;/</FONT></FONT></FONT><FONT COLOR="#3f7f7f"><FONT FACE="Monospace"><FONT SIZE=2>application</FONT></FONT></FONT><FONT COLOR="#008080"><FONT FACE="Monospace"><FONT SIZE=2>&gt;</FONT></FONT></FONT></P>
+<P ALIGN=LEFT STYLE="margin-bottom: 0cm"><BR>
+</P>
+<P ALIGN=LEFT STYLE="margin-bottom: 0cm; font-weight: normal"><BR>
+</P>
+<P ALIGN=LEFT STYLE="font-weight: normal"><FONT SIZE=3><SPAN STYLE="text-decoration: none">6.-
+Copiamos  la carpeta </SPAN><SPAN STYLE="text-decoration: none"><B>filper</B></SPAN><SPAN STYLE="text-decoration: none">
+que se encuentra dentro </SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-style: normal"><B>android_notifications
+</B></SPAN></SPAN></SPAN><SPAN STYLE="font-variant: normal"><SPAN STYLE="text-decoration: none"><SPAN STYLE="font-style: normal">
+y la pegamos en la carpeta src/com de  nuestro proyecto android</SPAN></SPAN></SPAN></FONT></P>
+<P><IMG SRC="Documentacion_html_2d6d0fbb.jpg" NAME="gráficos4" ALIGN=LEFT WIDTH=857 HEIGHT=579 BORDER=0><BR CLEAR=LEFT><BR><BR>
+</P>
+<P STYLE="font-weight: normal"><BR><BR>
+</P>
+<P STYLE="text-decoration: none"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Configurando
+filper_notifications</B></FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>La
+mayor partes de las configuraciones serán sobre el archivo
+WebSocketService.</FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>1.-
+Lo primero que debemos cambiar sera la linea #8 del archivo
+WebSocketService que tiene:</FONT></P>
+<P STYLE="margin-bottom: 0cm; font-weight: normal; text-decoration: none">
+<FONT SIZE=3><FONT COLOR="#7f0055"><FONT FACE="Monospace"><FONT SIZE=2><B>import</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Monospace"><FONT SIZE=2>
+com.filper.app.R;</FONT></FONT></FONT></FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>Con
+esto pasaremos los recursos a nuestro servicio.</FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>2.-
+Modificar el valor de la imagen que se mostrara en  la notificación
+cuando llegue un mensaje. Esto se puede realizar en  la linea 275 del
+archivo  WebSocketService.</FONT></P>
+<P STYLE="margin-bottom: 0cm; font-weight: normal; text-decoration: none">
+<FONT COLOR="#000000">        
+<FONT SIZE=3><FONT FACE="Monospace"><FONT SIZE=2>.setSmallIcon(R.drawable.</FONT></FONT></FONT><FONT COLOR="#0000c0"><FONT FACE="Monospace"><FONT SIZE=2><I>notification_icon</I></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Monospace"><FONT SIZE=2>)
+</FONT></FONT></FONT></FONT>
+</P>
+<P STYLE="margin-bottom: 0cm; font-weight: normal; text-decoration: none">
+<FONT COLOR="#000000">    <FONT SIZE=3><FONT FACE="Monospace"><FONT SIZE=2>cambiamos
+ R.drawable.</FONT></FONT></FONT><FONT COLOR="#0000c0"><FONT FACE="Monospace"><FONT SIZE=2><I>notification_icon,
+</I></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Monospace"><FONT SIZE=2><I>por
+el icono que agregemos a nuestros recursos</I></FONT></FONT></FONT></FONT></P>
+<P STYLE="margin-bottom: 0cm; font-weight: normal; text-decoration: none">
+<BR>
+</P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>3.-
+Modificar el nombre del proyecto en la linea #281 del archivo 
+WebSocketService</FONT></P>
+<P><SPAN STYLE="text-decoration: none">                         </SPAN><FONT COLOR="#000000">
+<FONT FACE="Monospace"><FONT SIZE=2>Intent resultIntent = </FONT></FONT></FONT><FONT COLOR="#7f0055"><FONT FACE="Monospace"><FONT SIZE=2><B>new</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Monospace"><FONT SIZE=2>
+Intent(</FONT></FONT></FONT><FONT COLOR="#7f0055"><FONT FACE="Monospace"><FONT SIZE=2><B>this</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Monospace"><FONT SIZE=2>,
+Class.</FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Monospace"><FONT SIZE=2><I>forName</I></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Monospace"><FONT SIZE=2>(</FONT></FONT></FONT><FONT COLOR="#2a00ff"><FONT FACE="Monospace"><FONT SIZE=2>&quot;com.filper.app.&quot;</FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Monospace"><FONT SIZE=2>+activity));</FONT></FONT></FONT></P>
+<P><FONT COLOR="#000000">                                            
+    </FONT><FONT COLOR="#000000"><FONT FACE="Monospace"><FONT SIZE=2>Cambiamos
+</FONT></FONT></FONT><FONT COLOR="#2a00ff"><FONT FACE="Monospace"><FONT SIZE=2>&quot;com.filper.app.&quot;
+</FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Monospace"><FONT SIZE=2>por
+el nombre del paquete de nuestro proyecto</FONT></FONT></FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>4.-
+Listo tenemos configurado nuestro paquete ahora solo queda hacer los
+imports en nuestra activity un ejemlo de esto lo puedes encontrar en
+la carpeta ejemplos/websocket</FONT></P>
+<P><BR><BR>
+</P>
+<P><BR><BR>
+</P>
+<P><BR><BR>
+</P>
+<P><BR><BR>
+</P>
+<P><BR><BR>
+</P>
+<P><FONT SIZE=4 STYLE="font-size: 16pt"><B><SPAN STYLE="text-decoration: none">Integrar
+django_push a un proyecto django</SPAN><U>:</U></B></FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>Encontraras
+un ejemplo en la carpeta de github ejemplos/django</FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>Los
+puntos claves a hacer es:</FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>1.
+Agregar la carpeta app_push a tu proyecto django</FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>2.
+Agregar a tus urls el la siguiente ruta: <FONT FACE="Tlwg Typo">url(r'',
+include('push.urls')),</FONT></FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>3.
+Agregar la aplicacion en tu settings.py file: <FONT FACE="Tlwg Typo">'django_push',</FONT></FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>4.
+Sincronizar base de datos : <FONT FACE="Tlwg Typo">python manage.py
+syncdb</FONT></FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT SIZE=3>5.
+Agregar el siguiente import en donde lo necesites:</FONT></P>
+<P STYLE="font-weight: normal; text-decoration: none"><FONT FACE="Tlwg Typo"><FONT SIZE=3>from
+django_push.notificationsHelper import *</FONT></FONT></P>
+<P><BR><BR>
+</P>
+<P><BR><BR>
+</P>
+</BODY>
+</HTML>
